@@ -1,61 +1,95 @@
+from pydantic import BaseModel
 import openai
 from dotenv import load_dotenv
 import os
-import json
-
 
 # Load OpenAI API key from .env
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
-def analyze_researcher_input(goal: str, target_group: str, number_of_questions: int, hypothesis: str, time_taken: int):
+
+class ResearcherInput(BaseModel):
+    goal: str
+    hypothesis: str
+    target_group: str
+    time_taken: int
+
+
+def analyze_researcher_input(goal: str, hypothesis: str, target_group: str, time_taken: int):
     """
-    Function to generate a research form using OpenAI's GPT-4 model based on researcher input.
+    Generates a research form in JSON format using OpenAI's GPT-4 model based on researcher input.
+
+    Args:
+        goal (str): The research goal.
+        hypothesis (str): The research hypothesis.
+        target_group (str): The target group for the research.
+        time_taken (int): The estimated time to complete the research (in minutes).
+
+    Returns:
+        str (or None): The generated research form in JSON format, or None if an error occurs.
     """
 
-    # Create a structured prompt based on the input data
     prompt = f"""
-    You are a professional research assistant. Based on the following inputs, generate a research form:
-    Questions should either be **multiple choice** or **two options like yes or no** or **open-ended** depending on the format preference.
+    You are a professional research assistant. Based on the following researcher inputs, generate a research form in JSON format:
 
-    Researcher Inputs:
+    **Researcher Inputs:**
     - Goal: {goal}
     - Hypothesis: {hypothesis}
     - Target Group: {target_group}
     - Time Taken (in minutes): {time_taken}
 
-    Based on this information, generate a research form with:
-    - Questions related to {goal} for {target_group}.
-    - Ensure that the questions are clear and related to {hypothesis}.
+    **Research Form Requirements:**
+    - Questions should be clear, concise, and relevant to the research goal and hypothesis.
+    - Use a mix of question formats (multiple choice, open ended, yes/no) depending on the information being gathered.
+    - The target audience is {target_group}.
 
-    Return the research form in the following format:
-    - Goal
-    - Target Group
-    - List of Questions (in JSON format with "question", "type" and "options" for MC questions)
+    **Output Format:**
+    The research form should be a JSON list of questions with the following structure for each question:
+        - question (string): The text of the question.
+        - type (string): The type of question (e.g., "Multiple Choice", "Open-Ended", "Yes/No").
+        - options (list of strings, optional): Only applicable for multiple choice questions, containing the available options.
+
+    **Example:**
+    [
+        {{
+            "question": "What do you think is the most significant benefit of using AI in daily life?",
+            "type": "Open-Ended"
+        }},
+        {{
+            "question": "How do you think AI will impact your daily routine in the next 5 years?",
+            "type": "Open-Ended"
+        }},
+        {{
+            "question": "Do you think AI-powered virtual assistants will improve your daily productivity?",
+            "type": "Multiple Choice",
+            "options": ["Strongly Agree", "Agree", "Neutral", "Disagree"]
+        }},
+        {{
+            "question": "What are the primary concerns you have about using AI in daily life?",
+            "type": "Open-Ended"
+        }},
+        {{
+            "question": "Would you prefer using AI-powered tools for tasks like data analysis and report generation?",
+            "type": "Multiple Choice",
+            "options": ["Yes", "No"]
+        }}
+    ]
     """
 
-    # Send the prompt to OpenAI GPT-4 to generate the research form
-    response = openai.Completion.create(
-        engine="gpt-4",  # Using the latest GPT-4 model
-        prompt=prompt,
-        max_tokens=700,  # Increased max_tokens for more detailed responses
-        temperature=0.7,
-        n=1
-    )
-
-    # Parse the response from OpenAI (assuming the model returns a structured format)
-    research_form = response.choices[0].text.strip()
-
-    return research_form
-
-
-def format_to_json(response):
-    """
-    Tries to format the generated research form response into a JSON format.
-    """
     try:
-        return json.loads(response)
-    except json.JSONDecodeError:
-        print("Error formatting response into JSON.")
-        return {}
+        # Using openai.Chat.completions.create for the new API
+        response = openai.Chat.completions.create(
+            model="gpt-4",  # Using GPT-4 model
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=700,
+            temperature=0.7
+        )
 
+        # Get the research form content (JSON) and strip whitespace
+        research_form = response.choices[0].message.content.strip()
+
+        return research_form
+
+    except Exception as e:
+        print(f"Error with OpenAI API: {e}")
+        return None

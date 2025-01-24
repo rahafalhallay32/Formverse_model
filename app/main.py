@@ -1,36 +1,32 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Body
 from pydantic import BaseModel
+from models.form_generator import analyze_researcher_input, ResearcherInput
+import uvicorn
 import json
-from app.form_generator import analyze_researcher_input, format_to_json
 
-
-# Initialize the FastAPI app
 app = FastAPI()
 
+@app.post("/generate_research_form")
+async def generate_research_form(researcher_input: ResearcherInput):
+  """
+  API endpoint to generate a research form based on researcher input.
+  """
+  goal = researcher_input.goal
+  hypothesis = researcher_input.hypothesis
+  target_group = researcher_input.target_group
+  time_taken = researcher_input.time_taken
 
-@app.get("/")
-def read_root():
-    return {"message": "Hello, World!"}
+  research_form = analyze_researcher_input(goal, hypothesis, target_group, time_taken)
 
-# Define the input data model using Pydantic
-class FormInput(BaseModel):
-    goal: str
-    target_group: str
-    hypothesis: str
-    time_taken: int  # Time in minutes
+  if research_form:
+    try:
+      # Parse the research form string into a JSON object
+      research_form_json = json.loads(research_form)
+      return {"research_form": research_form_json} 
+    except json.JSONDecodeError:
+      return {"error": "Failed to parse research form into JSON."}
+  else:
+    return {"error": "Failed to generate research form."}
 
-# Endpoint to generate the research form
-@app.post("/generate_form/")
-async def generate_form_endpoint(input: FormInput):
-    # Call the function to generate the form based on the inputs
-    form_response = analyze_researcher_input(input.goal, input.target_group,
-                                             input.hypothesis, input.time_taken)
-    
-    # Try to format the response into JSON
-    form_json = format_to_json(form_response)
-
-    # Return the JSON formatted research form
-    if form_json:
-        return {"form_questions": form_json}
-    else:
-        return {"error": "Failed to generate valid JSON from the response."}
+if __name__ == "__main__":
+  uvicorn.run(app, host="0.0.0.0", port=8000)
