@@ -23,10 +23,11 @@ async def generate_research_form(researcher_input: ResearcherInput):
       # Parse the research form string into a JSON object
       research_form_json = json.loads(research_form)
       return {"research_form": research_form_json} 
-    except json.JSONDecodeError:
-      return {"error": "Failed to parse research form into JSON."}
+    except Exception as e:  # Catch any exception
+        print(f"An error occurred: {e}")  # Print the error message
+        return {"error": f"An error occurred: {e}"}
   else:
     return {"error": "Failed to generate research form."}
 
 if __name__ == "__main__":
-  uvicorn.run(app, host="0.0.0.0", port=8000)
+  uvicorn.run(app, host="127.0.0.1", port=8000)

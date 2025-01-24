@@ -78,7 +78,7 @@ def analyze_researcher_input(goal: str, hypothesis: str, target_group: str, time
 
     try:
         # Using openai.Chat.completions.create for the new API
-        response = openai.Chat.completions.create(
+        response = openai.chat.completions.create(
             model="gpt-4",  # Using GPT-4 model
             messages=[{"role": "user", "content": prompt}],
             max_tokens=700,
