@@ -2,17 +2,18 @@ from pydantic import BaseModel
 import openai
 from dotenv import load_dotenv
 import os
+from models.dto import ResearcherInput
 
 # Load OpenAI API key from .env
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 
-class ResearcherInput(BaseModel):
+"""class ResearcherInput(BaseModel):
     goal: str
     hypothesis: str
     target_group: str
-    time_taken: int
+    time_taken: int"""
 
 
 def analyze_researcher_input(goal: str, hypothesis: str, target_group: str, time_taken: int):
