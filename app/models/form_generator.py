@@ -2,7 +2,7 @@ from pydantic import BaseModel
 import openai
 from dotenv import load_dotenv
 import os
-from models.dto import ResearcherInput
+# from models.dto import ResearcherInput
 
 # Load OpenAI API key from .env
 load_dotenv()

@@ -5,8 +5,17 @@ from models.form_generator import analyze_researcher_input  # Importing form gen
 from models.form_summarization import summarize_survey_responses  # Importing summarization logic
 import uvicorn
 import json
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow all origins. Replace "*" with specific origins if needed.
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all HTTP methods (GET, POST, etc.)
+    allow_headers=["*"],  # Allow all headers
+)
 
 # Endpoint for generating a research form based on researcher input
 @app.post("/generate_research_form")
