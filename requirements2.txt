@@ -1,5 +1,13 @@
-fastapi
-uvicorn
-openai
-pydantic
-python-dotenv
+fastapi              # For building the web application
+uvicorn              # For serving the FastAPI app
+openai               # For interacting with OpenAI's GPT API
+pydantic             # For data validation and models (used in FastAPI)
+python-dotenv        # For loading environment variables (OpenAI API key)
+matplotlib           # For generating pie charts and graphs
+wordcloud            # For generating word clouds from text
+python-docx          # For creating and modifying Word documents
+pillow               # Required by Wordcloud for image processing
+python-multipart
+langchain
+langchain-openai
+

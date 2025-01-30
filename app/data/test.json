@@ -1,0 +1,50 @@
+{
+  "User 1": {
+      "frequency": "Several times a week",
+      "mental_health_impact": "Agree",
+      "types_of_activity": [
+          "Jogging",
+          "Yoga",
+          "Swimming"
+      ],
+      "mood_improvement": "Yes",
+      "focus_and_productivity": "Yes",
+      "barriers": "Lack of time due to academic workload",
+      "interest_in_program": "Yes"
+  },
+  "User 2": {
+      "frequency": "Once a week",
+      "mental_health_impact": "Strongly Agree",
+      "types_of_activity": [
+          "Walking",
+          "Cycling"
+      ],
+      "mood_improvement": "Yes",
+      "focus_and_productivity": "Yes",
+      "barriers": "Weather, lack of motivation",
+      "interest_in_program": "Yes"
+  },
+  "User 3": {
+      "frequency": "Daily",
+      "mental_health_impact": "Strongly Agree",
+      "types_of_activity": [
+          "Gym workouts",
+          "Running"
+      ],
+      "mood_improvement": "Yes",
+      "focus_and_productivity": "Yes",
+      "barriers": "None",
+      "interest_in_program": "Yes"
+  },
+  "User 4": {
+      "frequency": "Rarely",
+      "mental_health_impact": "Neutral",
+      "types_of_activity": [
+          "None"
+      ],
+      "mood_improvement": "No",
+      "focus_and_productivity": "No",
+      "barriers": "Lack of time and interest",
+      "interest_in_program": "No"
+  }
+}
