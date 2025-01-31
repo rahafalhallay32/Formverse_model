@@ -8,8 +8,17 @@ from models.form_bot import interact_with_survey  # Importing the chatbot intera
 import uvicorn
 import json
 import os
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow all origins. Replace "*" with specific origins if needed.
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all HTTP methods (GET, POST, etc.)
+    allow_headers=["*"],  # Allow all headers
+)
 
 # Endpoint for generating a research form based on researcher input
 @app.post("/generate_research_form")
