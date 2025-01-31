@@ -41,38 +41,38 @@ def analyze_researcher_input(goal: str, hypothesis: str, target_group: str, time
 
     **Research Form Requirements:**
     - Questions should be clear, concise, and relevant to the research goal and hypothesis.
-    - Use a mix of question formats (multiple choice, open ended, yes/no) depending on the information being gathered.
+    - Use a mix of question formats (MCQ, OPEN ENDED, TRUE FALSE) depending on the information being gathered.
     - The target audience is {target_group}.
 
     **Output Format:**
     The research form should be a JSON list of questions with the following structure for each question:
         - question (string): The text of the question.
-        - type (string): The type of question (e.g., "Multiple Choice", "Open-Ended", "Yes/No").
+        - type (string): The type of question (e.g., "MCQ", "OPEN ENDED", "TRUE FALSE").
         - options (list of strings, optional): Only applicable for multiple choice questions, containing the available options.
 
     **Example:**
     [
         {{
             "question": "What do you think is the most significant benefit of using AI in daily life?",
-            "type": "Open-Ended"
+            "type": "OPEN ENDED"
         }},
         {{
             "question": "How do you think AI will impact your daily routine in the next 5 years?",
-            "type": "Open-Ended"
+            "type": "OPEN ENDED"
         }},
         {{
             "question": "Do you think AI-powered virtual assistants will improve your daily productivity?",
-            "type": "Multiple Choice",
+            "type": "MCQ",
             "options": ["Strongly Agree", "Agree", "Neutral", "Disagree"]
         }},
         {{
             "question": "What are the primary concerns you have about using AI in daily life?",
-            "type": "Open-Ended"
+            "type": "OPEN ENDED"
         }},
         {{
             "question": "Would you prefer using AI-powered tools for tasks like data analysis and report generation?",
-            "type": "Multiple Choice",
-            "options": ["Yes", "No"]
+            "type": "TRUE FALSE",
+            "options": ["true", "false"]
         }}
     ]
     """

@@ -1,10 +1,10 @@
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
-from models.dto import ResearcherInput  # Importing DTOs from dto.py
-from models.form_generator import analyze_researcher_input  # Importing form generation 
-from models.survey_report import run_analysis  # Importing the survey report
-from models.form_bot import interact_with_survey  # Importing the chatbot interaction function
+from app.models.dto import ResearcherInput  # Importing DTOs from dto.py
+from app.models.form_generator import analyze_researcher_input  # Importing form generation 
+from app.models.survey_report import run_analysis  # Importing the survey report
+from app.models.form_bot import interact_with_survey  # Importing the chatbot interaction function
 import uvicorn
 import json
 import os
