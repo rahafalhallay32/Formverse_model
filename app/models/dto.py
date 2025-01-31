@@ -10,18 +10,20 @@ class ResearcherInput(BaseModel):
     target_group: str
     time_taken: int
 
-class SummarizeInput(BaseModel):
-    """
-    Represents the input data needed for summarizing survey responses.
-    """
-    goal: str
-    hypothesis: str
-    target_group: str
-    time_taken: int
-    user_responses: List[str]  # A list of user responses to summarize
 
 class SurveyResponse(BaseModel):
     """
     Represents a single survey response from a user.
     """
-    response: str
+    user: str
+    responses: List[dict]  # List of responses containing question-answer pairs
+
+class SurveyData(BaseModel):
+    """
+    Represents the structure of survey data including goal, hypothesis, target group, etc.
+    """
+    goal: str
+    hypothesis: str
+    target_group: str
+    time_taken: int
+    survey_responses: List[SurveyResponse]  # List of survey responses
