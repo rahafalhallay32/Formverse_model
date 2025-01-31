@@ -48,7 +48,7 @@ def analyze_researcher_input(goal: str, hypothesis: str, target_group: str, time
     The research form should be a JSON list of questions with the following structure for each question:
         - question (string): The text of the question.
         - type (string): The type of question (e.g., "MCQ", "OPEN ENDED", "TRUE FALSE").
-        - options (list of strings, optional): Only applicable for multiple choice questions, containing the available options.
+        - options (list of strings, optional): Only applicable for multiple choice questions, containing the available options, For TRUE FALSE questions, the options should be limited to exactly two strings: "true" and "false".
 
     **Example:**
     [
