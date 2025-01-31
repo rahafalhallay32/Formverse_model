@@ -28,30 +28,75 @@ def load_survey_data(json_data):
 def analyze_closed_end_questions(survey_data, doc):
     closed_end_questions = {}
     
-    for user in survey_data['survey_responses']:
-        for response in user['responses']:
-            question = response['question']
-            answer = response['answer'].lower()
-            
-            if answer in ['yes', 'no']:
-                if question not in closed_end_questions:
-                    closed_end_questions[question] = {'Yes': 0, 'No': 0}
-                if answer == 'yes':
-                    closed_end_questions[question]['Yes'] += 1
-                elif answer == 'no':
-                    closed_end_questions[question]['No'] += 1
-
-    for i, (question, counts) in enumerate(closed_end_questions.items()):
-        labels = ['Yes', 'No']
-        sizes = [counts['Yes'], counts['No']]
+    # Iterate over questions and their answers
+    for question in survey_data['questions']:
+        question_text = question['question']
+        question_type = question.get('questionType', '').lower()  # Get question type (e.g., MCQ, True/False)
+        answers = question.get('answers', [])  # Get answers or default to an empty list
         
-        chart_filename = f"chart_{i}.png"
-        plt.figure(figsize=(6,6))
-        plt.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=90, colors=['#ff9999','#66b3ff'])
-        plt.title(f"Response Distribution - {question}")
-        plt.savefig(chart_filename)
-        plt.close()
+        # Process answers for closed-ended questions
+        for answer in answers:
+            if isinstance(answer, list):  # Ensure answer is a list
+                for a in answer:
+                    a_lower = a.lower()
+                    
+                    # Handle Yes/No questions
+                    if a_lower in ['yes', 'no']:
+                        if question_text not in closed_end_questions:
+                            closed_end_questions[question_text] = {'type': 'yes_no', 'Yes': 0, 'No': 0}
+                        if a_lower == 'yes':
+                            closed_end_questions[question_text]['Yes'] += 1
+                        elif a_lower == 'no':
+                            closed_end_questions[question_text]['No'] += 1
+                    
+                    # Handle True/False questions
+                    elif a_lower in ['true', 'false']:
+                        if question_text not in closed_end_questions:
+                            closed_end_questions[question_text] = {'type': 'true_false', 'True': 0, 'False': 0}
+                        if a_lower == 'true':
+                            closed_end_questions[question_text]['True'] += 1
+                        elif a_lower == 'false':
+                            closed_end_questions[question_text]['False'] += 1
+                    
+                    # Handle MCQ questions
+                    elif question_type == 'mcq':
+                        if question_text not in closed_end_questions:
+                            closed_end_questions[question_text] = {'type': 'mcq'}
+                        if a_lower not in closed_end_questions[question_text]:
+                            closed_end_questions[question_text][a_lower] = 0
+                        closed_end_questions[question_text][a_lower] += 1
 
+    # Generate charts for closed-ended questions
+    for i, (question, data) in enumerate(closed_end_questions.items()):
+        chart_filename = f"chart_{i}.png"
+        
+        if data['type'] == 'yes_no' or data['type'] == 'true_false':
+            # Pie chart for Yes/No and True/False questions
+            labels = list(data.keys())[1:]  # Exclude 'type' key
+            sizes = list(data.values())[1:]  # Exclude 'type' value
+            
+            plt.figure(figsize=(6,6))
+            plt.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=90, colors=plt.cm.Paired.colors)
+            plt.title(f"Response Distribution - {question}")
+            plt.savefig(chart_filename)
+            plt.close()
+        
+        elif data['type'] == 'mcq':
+            # Bar chart for MCQ questions
+            labels = list(data.keys())[1:]  # Exclude 'type' key
+            counts = list(data.values())[1:]  # Exclude 'type' value
+            
+            plt.figure(figsize=(8,6))
+            plt.bar(labels, counts, color=plt.cm.Paired.colors)
+            plt.title(f"Response Distribution - {question}")
+            plt.xlabel("Options")
+            plt.ylabel("Count")
+            plt.xticks(rotation=45, ha='right')
+            plt.tight_layout()
+            plt.savefig(chart_filename)
+            plt.close()
+
+        # Add the chart to the Word document
         doc.add_paragraph(f"Question: {question}")
         doc.add_picture(chart_filename, width=Inches(4.0))
         doc.add_paragraph("\n")
@@ -61,35 +106,49 @@ def analyze_closed_end_questions(survey_data, doc):
 def generate_wordcloud_for_open_end(survey_data, doc):
     open_end_answers = []
 
-    for user in survey_data['survey_responses']:
-        for response in user["responses"]:
-            if response['answer'].lower() not in ['yes', 'no']:
-                open_end_answers.append(response["answer"])
-    
-    word_counts = Counter(" ".join(open_end_answers).split())
-    most_common_words = dict(word_counts.most_common(10))
-    
-    wordcloud = WordCloud(width=800, height=400, background_color='white').generate_from_frequencies(most_common_words)
-    wordcloud_filename = "wordcloud.png"
-    wordcloud.to_file(wordcloud_filename)
+    # Iterate over questions and their answers
+    for question in survey_data['questions']:
+        answers = question.get('answers', [])  # Get answers or default to an empty list
+        
+        # Process answers for open-ended questions
+        for answer in answers:
+            if isinstance(answer, list):  # Ensure answer is a list
+                for a in answer:
+                    if a.lower() not in ['yes', 'no']:  # Exclude closed-ended answers
+                        open_end_answers.append(a)
 
-    doc.add_paragraph("Top 10 Most Common Words in Open-Ended Questions")
-    doc.add_picture(wordcloud_filename, width=Inches(4.0))
-    doc.add_paragraph("\n")
+    # Generate word cloud for open-ended answers
+    if open_end_answers:
+        word_counts = Counter(" ".join(open_end_answers).split())
+        most_common_words = dict(word_counts.most_common(10))
+        
+        wordcloud = WordCloud(width=800, height=400, background_color='white').generate_from_frequencies(most_common_words)
+        wordcloud_filename = "wordcloud.png"
+        wordcloud.to_file(wordcloud_filename)
 
-    os.remove(wordcloud_filename)
+        doc.add_paragraph("Top 10 Most Common Words in Open-Ended Questions")
+        doc.add_picture(wordcloud_filename, width=Inches(4.0))
+        doc.add_paragraph("\n")
+
+        os.remove(wordcloud_filename)
 
 def generate_analysis_with_gpt(survey_data):
     goal = survey_data['goal']
     hypothesis = survey_data['hypothesis']
-    target_group = survey_data['target_group']
-    time_taken = survey_data['time_taken']
+    target_group = survey_data['targetGroup']
+    time_taken = survey_data['timeTaken']
     
     formatted_responses = []
-    for user in survey_data['survey_responses']:
-        formatted_responses.append(f"User {user['user']} responses:")
-        for item in user['responses']:
-            formatted_responses.append(f"- {item['question']}: {item['answer']}")
+    
+    # Iterate over questions and their answers
+    for question in survey_data['questions']:
+        question_text = question['question']
+        answers = question.get('answers', [])  # Get answers or default to an empty list
+        
+        if answers:
+            formatted_responses.append(f"Question: {question_text}")
+            for answer in answers:
+                formatted_responses.append(f"- Answer: {answer}")
 
     analyze_prompt = f"""
     You are a skilled data analyst tasked with analyzing survey responses containing both closed and open-ended questions. Your main goal is to deliver a structured and data-driven analysis with proper charts and thematic analysis.
@@ -127,8 +186,8 @@ def create_word_document(survey_data, gpt_analysis, output_path):
     doc.add_heading('Survey Analysis Report', 0)
     doc.add_paragraph(f"Goal: {survey_data['goal']}")
     doc.add_paragraph(f"Hypothesis: {survey_data['hypothesis']}")
-    doc.add_paragraph(f"Target Group: {survey_data['target_group']}")
-    doc.add_paragraph(f"Time Taken (in minutes): {survey_data['time_taken']}")
+    doc.add_paragraph(f"Target Group: {survey_data['targetGroup']}")
+    doc.add_paragraph(f"Time Taken (in minutes): {survey_data['timeTaken']}")
     
     doc.add_heading('Analysis:', level=1)
     doc.add_paragraph(gpt_analysis)

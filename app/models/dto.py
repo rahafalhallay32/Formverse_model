@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional, Union
 
 class ResearcherInput(BaseModel):
     """
@@ -27,3 +27,26 @@ class SurveyData(BaseModel):
     target_group: str
     time_taken: int
     survey_responses: List[SurveyResponse]  # List of survey responses
+
+class Question(BaseModel):
+    question: str
+    questionType: str
+    options: List[str]
+    isRequired: bool
+    _id: str
+    answers: Optional[List[List[str]]] = None
+
+class FormData(BaseModel):
+    _id: str
+    title: str
+    questions: List[Question]
+    summary: Optional[str] = None
+    user: str
+    isPublished: bool
+    isActive: bool
+    isGenerated: bool
+    isResultsShared: bool
+    goal: Optional[str] = None
+    hypothesis: Optional[str] = None
+    targetGroup: Optional[str] = None
+    timeTaken: Optional[Union[str, int]] = None

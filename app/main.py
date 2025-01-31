@@ -1,7 +1,7 @@
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
-from app.models.dto import ResearcherInput  # Importing DTOs from dto.py
+from app.models.dto import ResearcherInput, FormData, Question  # Importing DTOs from dto.py
 from app.models.form_generator import analyze_researcher_input  # Importing form generation 
 from app.models.survey_report import run_analysis  # Importing the survey report
 from app.models.form_bot import interact_with_survey  # Importing the chatbot interaction function
@@ -9,8 +9,12 @@ import uvicorn
 import json
 import os
 from fastapi.middleware.cors import CORSMiddleware
+import logging
 
 app = FastAPI()
+
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 app.add_middleware(
     CORSMiddleware,
@@ -46,26 +50,38 @@ async def generate_research_form(researcher_input: ResearcherInput):
     else:
         return {"error": "Failed to generate research form."}
 
+
+
 # Endpoint survey report
 @app.post("/generate_survey_report")
-async def generate_survey_report(file: UploadFile = File(...)):
+async def generate_survey_report(survey_data: FormData):
     try:
-        if file is None:
-            raise HTTPException(status_code=400, detail="File not provided.")
+        # Check if the form is not AI-generated and validate required fields
+        logger.debug("Received survey data: %s", survey_data.json())
+        if not survey_data.isGenerated:
+            if not survey_data.goal or not survey_data.hypothesis or not survey_data.targetGroup or not survey_data.timeTaken:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Required fields (goal, hypothesis, targetGroup, timeTaken) are missing for non-AI-generated form."
+                )
         
-        json_data = await file.read()
-        output_path = "../data"  # Temporary path for saving the report
+        logger.debug("Received survey data: %s", survey_data.json())
         
-        # Ensure the output directory exists
+        output_path = "./output"
         if not os.path.exists(output_path):
             os.makedirs(output_path)
         
-        report_filename = run_analysis(json_data.decode(), output_path)
+        json_data = survey_data.json()
+        report_filename = run_analysis(json_data, output_path)
         
-        # Return the generated file as response
-        return FileResponse(report_filename, media_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document', filename="survey_analysis_report.docx")
+        return FileResponse(
+            report_filename,
+            media_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            filename="survey_analysis_report.docx"
+        )
     
     except Exception as e:
+        logger.error("Error generating survey report: %s", str(e), exc_info=True)
         raise HTTPException(status_code=500, detail=f"Error generating survey report: {str(e)}")
 
 
