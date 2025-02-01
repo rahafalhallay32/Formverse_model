@@ -54,3 +54,22 @@ class FormData(BaseModel):
 class ChatRequest(BaseModel):
     form_data: Dict[str, Any]
     query: str
+
+class ChatSurveyData(BaseModel):
+    _id: str
+    title: str
+    questions: List[Question]
+    summary: Optional[str] = None
+    user: str
+    isPublished: bool
+    isActive: bool
+    isGenerated: bool
+    isResultsShared: bool
+    goal: Optional[str] = None
+    hypothesis: Optional[str] = None
+    targetGroup: Optional[str] = None
+    timeTaken: Optional[str] = None
+
+class SurveyQueryRequest(BaseModel):
+    survey_data: ChatSurveyData
+    query: str

@@ -7,9 +7,6 @@ from collections import Counter
 from docx import Document
 from docx.shared import Inches
 from dotenv import load_dotenv  # For loading the API key from environment variables
-from fastapi import HTTPException
-from fastapi.responses import FileResponse
-from fastapi import UploadFile, File
 
 # Load OpenAI API key from .env
 load_dotenv()
@@ -206,12 +203,3 @@ def run_analysis(json_data, output_path):
     if survey_data:
         gpt_analysis = generate_analysis_with_gpt(survey_data)
         return create_word_document(survey_data, gpt_analysis, output_path)
-
-
-"""
-if __name__ == "__main__":
-    with open('../data/survey_data.json', 'r') as file:  # Adjust the path to the data file
-        json_data = file.read()
-    
-    output_path = '../data'  # Specify the output directory
-    run_analysis(json_data, output_path)"""
