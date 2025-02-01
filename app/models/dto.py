@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Dict, Any
 
 class ResearcherInput(BaseModel):
     """
@@ -50,3 +50,7 @@ class FormData(BaseModel):
     hypothesis: Optional[str] = None
     targetGroup: Optional[str] = None
     timeTaken: Optional[Union[str, int]] = None
+
+class ChatRequest(BaseModel):
+    form_data: Dict[str, Any]
+    query: str

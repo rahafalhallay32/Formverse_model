@@ -130,12 +130,28 @@ def interact_with_survey(file_path, query):
     """Main function to load JSON, process it, and answer queries."""
     try:
         # Load JSON data from the saved file
-        responses_data = load_json_data(file_path)
-        
-        # Split the data and initialize the LLM chain
-        chunks = split_data(responses_data)
+        survey_data = load_json_data(file_path)
+
+        # Extract questions and answers from the survey data
+        questions = survey_data.get("questions", [])
+        responses_str = ""
+
+        # Format the questions and answers into a string
+        for question in questions:
+            question_text = question.get("question", "")
+            answers = question.get("answers", [])
+            formatted_answers = ", ".join([ans for sublist in answers for ans in sublist])
+            responses_str += f"Question: {question_text}\nAnswers: {formatted_answers}\n\n"
+
+        # Initialize the text splitter (Langchain RecursiveCharacterTextSplitter)
+        text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=100)
+
+        # Split the data into manageable chunks
+        chunks = text_splitter.split_text(responses_str)
+
+        # Initialize the LLM chain
         llm_chain = initialize_llm_chain()
-        
+
         # Get the response from the chatbot interaction
         response = chatbot_interaction(query, chunks, llm_chain)
         return response

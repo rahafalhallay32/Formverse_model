@@ -84,42 +84,85 @@ async def generate_survey_report(survey_data: FormData):
         logger.error("Error generating survey report: %s", str(e), exc_info=True)
         raise HTTPException(status_code=500, detail=f"Error generating survey report: {str(e)}")
 
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse, JSONResponse
+from pydantic import BaseModel
+from typing import List, Optional
+import uvicorn
+import json
+import os
+import logging
+from langchain_openai import ChatOpenAI
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.prompts import PromptTemplate
+from langchain.chains import LLMChain
+from dotenv import load_dotenv
 
-# Endpoint for Chatbot Interaction
-# Endpoint for Chatbot Interaction
+class Question(BaseModel):
+    question: str
+    questionType: str
+    options: List[str]
+    isRequired: bool
+    _id: str
+    answers: List[List[str]]
+
+class SurveyData(BaseModel):
+    _id: str
+    title: str
+    questions: List[Question]
+    summary: Optional[str] = None
+    user: str
+    isPublished: bool
+    isActive: bool
+    isGenerated: bool
+    isResultsShared: bool
+    goal: Optional[str] = None
+    hypothesis: Optional[str] = None
+    targetGroup: Optional[str] = None
+    timeTaken: Optional[str] = None
+
+class SurveyQueryRequest(BaseModel):
+    survey_data: SurveyData
+    query: str
+
+# Chatbot Functions
+def initialize_llm_chain():
+    llm = ChatOpenAI(temperature=0.7, model="gpt-4")
+    prompt_template = """
+    You are an intelligent assistant helping analyze survey data. Use this data:
+    {data}
+    
+    Question: {query}
+    
+    Guidelines:
+    1. Answer based only on the provided data
+    2. Be concise and specific
+    3. If data is missing, state that clearly
+    """
+    prompt = PromptTemplate(input_variables=["data", "query"], template=prompt_template)
+    return LLMChain(prompt=prompt, llm=llm)
+
+def process_survey_data(survey_data: SurveyData):
+    responses_str = "\n".join(
+        [f"Q: {q.question}\nA: {', '.join(a[0] for a in q.answers)}" 
+         for q in survey_data.questions]
+    )
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=100)
+    return text_splitter.split_text(responses_str)
+
 @app.post("/ask_survey_question")
-async def ask_survey_question(file: UploadFile = File(...), query: str = ""):
-    """
-    API endpoint to ask a question to the chatbot based on the survey data.
-    It processes the uploaded JSON file and returns a response based on the query.
-    """
+async def ask_survey_question(request: SurveyQueryRequest):
     try:
-        if file is None:
-            raise HTTPException(status_code=400, detail="File not provided.")
-        if not query:
-            raise HTTPException(status_code=400, detail="Query not provided.")
-
-        # Save the uploaded file to a temporary directory
-        output_path = "./data"  # Temporary path for saving the file
-
-        # Ensure the output directory exists
-        if not os.path.exists(output_path):
-            os.makedirs(output_path)
-        
-        # Generate a unique filename for the uploaded file
-        file_location = os.path.join(output_path, file.filename)
-
-        # Write the uploaded file to the directory
-        with open(file_location, "wb") as buffer:
-            buffer.write(await file.read())
-
-        # Now pass the file path to the `interact_with_survey` function
-        response = interact_with_survey(file_location, query)  # Pass the file path to the function
-
-        return {"response": response}
-
+        chunks = process_survey_data(request.survey_data)
+        llm_chain = initialize_llm_chain()
+        response = llm_chain.run({
+            "data": "\n".join(chunks),
+            "query": request.query
+        })
+        return JSONResponse(content={"response": response})
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error interacting with chatbot: {str(e)}")
+        logger.error(f"Error processing request: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # Run the FastAPI application
